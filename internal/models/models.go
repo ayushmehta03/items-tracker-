@@ -1,21 +1,31 @@
 package models
 
-import(
-	"gorm.io/gorm"
-"gorm.io/driver/sqlite"
+import (
+	"fmt"
 
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 
 type DBModel struct{
-	OrderModel
+ Order	OrderModel
 }
 
-func Connect()(*gorm.DB,error){
-	db,err:=gorm.Open(sqlite.Open("test.db"),&gorm.Config{})
+func Connect(dataSourceName string)(*DBModel,error){
+	db,err:=gorm.Open(sqlite.Open(dataSourceName),&gorm.Config{})
 	if err!=nil{
 		return nil,err
 	}
 
-	return db,nil
+	err=db.AutoMigrate(&Order{},&OrderItem{})
+	if err!=nil{
+		return nil,fmt.Errorf("Failed to migrate database %v",err)
+	}
+
+	dbModel:=&DBModel{
+		Order:OrderModel{DB:db},
+	}
+
+	return dbModel,nil
 }
